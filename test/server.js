@@ -6,7 +6,7 @@
  *  LICENSE file in the root directory of this source tree.
  */
 
- /* eslint-disable no-console */
+/* eslint-disable no-console */
 import express from 'express';
 import path from 'path';
 import browserify from 'browserify';
@@ -14,25 +14,55 @@ import browserifyShim from 'browserify-shim';
 import watchify from 'watchify';
 import babelify from 'babelify';
 import graphqlHTTP from 'express-graphql';
+import {
+  TraceCollector,
+  instrumentSchemaForTracing,
+  formatTraceData,
+} from 'apollo-tracing';
 
 import schema from './schema';
 
 const app = express();
 
 // Server
-app.use('/graphql', graphqlHTTP({ schema }));
+if (process.env.TRACING) {
+  app.use(
+    '/graphql',
+    (req, res, next) => {
+      const traceCollector = new TraceCollector();
+      traceCollector.requestDidStart();
+      req._traceCollector = traceCollector;
+      next();
+    },
+    graphqlHTTP(request => ({
+      schema: instrumentSchemaForTracing(schema),
+      context: {
+        _traceCollector: request._traceCollector,
+      },
+      extensions: () => {
+        const traceCollector = request._traceCollector;
+        traceCollector.requestDidEnd();
+        return {
+          tracing: formatTraceData(traceCollector),
+        };
+      },
+    })),
+  );
+} else {
+  app.use('/graphql', graphqlHTTP({ schema }));
+}
 
 // Client
 let bundleBuffer;
 
 const b = browserify({
-  entries: [ path.join(__dirname, '../src/index.js') ],
+  entries: [path.join(__dirname, '../src/index.js')],
   cache: {},
   packageCache: {},
-  transform: [ babelify, browserifyShim ],
-  plugin: [ watchify ],
+  transform: [babelify, browserifyShim],
+  plugin: [watchify],
   standalone: 'GraphiQL',
-  globalTransform: 'browserify-shim'
+  globalTransform: 'browserify-shim',
 });
 
 b.on('update', () => makeBundle());

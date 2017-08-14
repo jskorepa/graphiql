@@ -360,6 +360,7 @@ export class GraphiQL extends React.Component {
                 ref={c => { this.resultComponent = c; }}
                 value={this.state.response}
                 editorTheme={this.props.editorTheme}
+                tracing
               />
               {footer}
             </div>

@@ -60,6 +60,7 @@
     "react-dom": "^15.6.0"
   },
   "devDependencies": {
+    "apollo-tracing": "^0.0.7",
     "autoprefixer": "^7.0.0",
     "babel-cli": "6.24.1",
     "babel-eslint": "7.2.3",
