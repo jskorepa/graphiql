@@ -134,7 +134,12 @@
           operationName: parameters.operationName,
           onEditQuery: onEditQuery,
           onEditVariables: onEditVariables,
-          onEditOperationName: onEditOperationName
+          onEditOperationName: onEditOperationName,
+          ResultsTooltip: () => React.createElement(
+            "div",
+            null,
+            "Hello world!"
+          )
         }),
         document.getElementById('graphiql')
       );
